@@ -1,8 +1,3 @@
-require 'rubygems'
-gem 'sqlite3-ruby'
-require 'activerecord'
-require 'yaml'
-
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require 'hyrarchy'
 Hyrarchy.activate!

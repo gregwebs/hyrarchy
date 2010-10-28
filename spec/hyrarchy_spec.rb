@@ -41,13 +41,11 @@ describe Hyrarchy do
     end
   
     it "should find its descendants" do
-      returned_descendants = @roots[1].descendants
-      returned_descendants.sort! {|a,b| a.name <=> b.name}
-      actual_descendants = @layer1 + @layer2
-      actual_descendants.sort! {|a,b| a.name <=> b.name}
-      returned_descendants.should == actual_descendants
       @roots[0].descendants.should be_empty
       @roots[2].descendants.should be_empty
+      returned_descendants = @roots[1].descendants.sort! {|a,b| a.name <=> b.name}
+      actual_descendants = (@layer1 + @layer2).sort! {|a,b| a.name <=> b.name}
+      returned_descendants.should == actual_descendants
     end
   
     it "should find its children" do

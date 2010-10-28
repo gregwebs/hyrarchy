@@ -83,9 +83,10 @@ module Hyrarchy
       after_save :update_descendant_paths
       after_save :reset_flags
       
-      named_scope :roots,
+      rails3 = defined?(ActiveRecord::VERSION) && ActiveRecord::VERSION::MAJOR >= 3
+      self.send(rails3 ? :scope : :named_scope, :roots,
         :conditions => { :parent_id => nil },
-        :order      => 'rgt DESC, lft'
+        :order      => 'rgt DESC, lft')
     end
   end
   
@@ -156,8 +157,7 @@ module Hyrarchy
     # Returns an array of this node's descendants: its children, grandchildren,
     # and so on. The array returned by this method is a named scope.
     def descendants
-      cached[:descendants] ||=
-        self_and_descendants.scoped :conditions => "id <> #{id}"
+      cached[:descendants] ||= self_and_descendants.scoped({:conditions => "id <> #{id}"})
     end
     
     # Returns an array of this node's ancestors--its parent, grandparent, and

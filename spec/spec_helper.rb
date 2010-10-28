@@ -1,9 +1,5 @@
-require 'rubygems'
-gem 'sqlite3-ruby'
-require 'spec'
-require 'activerecord'
-require 'yaml'
-require 'narray'
+require 'active_record'
+ActiveRecord::ActiveRecordError # workaround for load issue
 
 # Load and activate Hyrarchy.
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
@@ -13,8 +9,8 @@ Hyrarchy.activate!
 # Set up a logger.
 log_path = File.join(File.dirname(__FILE__), 'log')
 File.unlink(log_path) rescue nil
-ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new(log_path)
-ActiveRecord::Base.logger.add 0, "\n"
+#ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new(log_path)
+#ActiveRecord::Base.logger.add 0, "\n"
 
 # Connect to the test database.
 db_specs = YAML.load_file(File.join(File.dirname(__FILE__), 'database.yml'))
