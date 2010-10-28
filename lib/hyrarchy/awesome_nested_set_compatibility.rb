@@ -56,8 +56,8 @@ module Hyrarchy
 
       # Rebuilds the model's hierarchy attributes based on the parent_id
       # attributes.
-      def rebuild!
-        return true if (valid? rescue false)
+      def rebuild!(force = false)
+        return true if !force and (valid? rescue false)
         
         update_all("lft = id, rgt = id, lft_numer = id, lft_denom = id")
         paths_by_id = {}
@@ -139,32 +139,17 @@ module Hyrarchy
         cache_key = with_self ? :self_and_siblings : :siblings
         return cached[cache_key] if cached[cache_key]
 
-        if with_self
-          conditions = { :parent_id => parent_id }
-        else
-          conditions = ["parent_id #{parent_id.nil? ? 'IS' : '='} ? AND id <> ?",
-            parent_id, id]
-        end
-
-        cached[cache_key] = self.class.scoped(
-          :conditions => conditions,
-          :order      => 'rgt DESC, lft'
-        )
+        cached[cache_key] = self.class.send("#{cache_key}_of", self)
       end
 
       # Returns an array containing this node's childless descendants. The
       # array returned by this method is a named scope.
       def leaves
-        cached[:leaves] ||= descendants.scoped :conditions => "NOT EXISTS (
-          SELECT * FROM #{self.class.quoted_table_name} tt
-          WHERE tt.parent_id = #{self.class.quoted_table_name}.id
-        )"
+        cached[:leaves] ||= descendants.leaves
       end
 
       # Alias for depth.
-      def level
-        depth
-      end
+      def level; depth end
 
       # Returns an array of this node and its descendants: its children,
       # grandchildren, and so on. The array returned by this method is a

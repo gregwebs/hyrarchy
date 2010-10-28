@@ -24,11 +24,14 @@ describe Hyrarchy do
         Node.create!(:name => '1.2.1', :parent => @layer1[2])
       ]
     
-      @roots.collect! {|n| Node.find(n.id)}
-      @layer1.collect! {|n| Node.find(n.id)}
-      @layer2.collect! {|n| Node.find(n.id)}
+      @roots.each(&:reload)
+      @layer1.each(&:reload)
+      @layer2.each(&:reload)
+      @roots_sorted  = @roots.sort_by(&:name)
+      @layer1_sorted = @layer1.sort_by(&:name)
+      @layer2_sorted = @layer2.sort_by(&:name)
     end
-  
+
     it "should find its parent" do
       @layer2[0].parent.should == @layer1[0]
       @layer2[1].parent.should == @layer1[0]
@@ -46,6 +49,24 @@ describe Hyrarchy do
       returned_descendants = @roots[1].descendants.sort! {|a,b| a.name <=> b.name}
       actual_descendants = (@layer1 + @layer2).sort! {|a,b| a.name <=> b.name}
       returned_descendants.should == actual_descendants
+    end
+
+    it "siblings" do
+      [@roots, @layer1].each do |layer|
+        layer.each do |node|
+          node.siblings.should == layer - [node]
+        end
+      end
+    end
+
+    it "leaves" do
+      (@layer2 + [@roots[0],@roots[2]]).each do |node|
+        node.leaves.should == []
+      end
+      @roots[1].leaves.should == @layer2
+      @layer1[0].leaves.should == @layer2[0..1]
+      @layer1[1].leaves.should == @layer2[2..3]
+      @layer1[2].leaves.should == @layer2[4..5]
     end
   
     it "should find its children" do
@@ -124,6 +145,11 @@ describe Hyrarchy do
       (@layer1 + @layer2).each do |node|
         lambda { Node.find(node.id) }.should raise_error(ActiveRecord::RecordNotFound)
       end
+    end
+
+    it "should rebuild" do
+      Node.rebuild!       # already valid
+      Node.rebuild!(true) # force valid
     end
   end
   

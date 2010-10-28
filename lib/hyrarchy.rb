@@ -84,9 +84,29 @@ module Hyrarchy
       after_save :reset_flags
       
       rails3 = defined?(ActiveRecord::VERSION) && ActiveRecord::VERSION::MAJOR >= 3
-      self.send(rails3 ? :scope : :named_scope, :roots,
+      send(rails3 ? :scope : :named_scope, :roots,
         :conditions => { :parent_id => nil },
         :order      => 'rgt DESC, lft')
+      send(rails3 ? :scope : :named_scope, :without_self,
+        lambda {|r| { :conditions => "id <> #{r.id}" } })
+
+      # nested set compatability
+      send(rails3 ? :scope : :named_scope, :siblings_of,
+        lambda {|r| {
+          :order      => 'rgt DESC, lft',
+          :conditions => ["parent_id #{r.parent_id.nil? ? 'IS' : '='} ? AND id <> ?", r.parent_id, r.id]
+        } })
+      send(rails3 ? :scope : :named_scope, :siblings_and_self_of,
+        lambda {|r| {
+          :order      => 'rgt DESC, lft',
+          :conditions => { :parent_id => parent_id }
+        } })
+
+      send(rails3 ? :scope : :named_scope, :leaves,
+        :conditions => "NOT EXISTS (
+          SELECT * FROM #{quoted_table_name} tt
+          WHERE tt.parent_id = #{quoted_table_name}.id
+        )")
     end
   end
   
@@ -157,7 +177,7 @@ module Hyrarchy
     # Returns an array of this node's descendants: its children, grandchildren,
     # and so on. The array returned by this method is a named scope.
     def descendants
-      cached[:descendants] ||= self_and_descendants.scoped({:conditions => "id <> #{id}"})
+      cached[:descendants] ||= self_and_descendants.without_self(self)
     end
     
     # Returns an array of this node's ancestors--its parent, grandparent, and

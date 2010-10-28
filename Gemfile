@@ -5,4 +5,5 @@ group :test do
   gem 'narray'
   gem 'rspec'
   gem 'mysql'
+  gem 'ruby-debug'
 end
