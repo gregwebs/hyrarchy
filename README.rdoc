@@ -1,3 +1,7 @@
+= Brokeness
+This library appears to work fine on Rails2. However, the rebuild! method is broken, so you can't convert existing data to use it.
+There are test failures for Rails3.
+
 = Hyrarchy
 
 Hyrarchy (Hybrid hieRarchy) is a gem and Rails plugin for working with hierarchic data in ActiveRecord. Your models gain methods for finding an instance's parent, children, ancestors, descendants, and depth, as well as a named scope for finding root nodes.
@@ -58,7 +62,7 @@ The convert option will modify the table structure but it won't rebuild the hier
 
 The same option can be used with remove_hierarchy for the down half of a migration.
 
-Hyrarchy doesn't yet support awesome_nested_set's scoping feature or its view helper.
+Hyrarchy doesn't yet awesome_nested_set's scoping feature or its view helper.
 
 == Implementation Details
 
