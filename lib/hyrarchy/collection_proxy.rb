@@ -42,14 +42,10 @@ module Hyrarchy
     
     # Overrides count to run the association's +count+ procedure, with caching.
     def count
-      if @count
-        if @count.respond_to?(:call)
-          @count = @count.call
-        else
-          @count
-        end
-      else
-        super
+      return super unless @count
+
+      if !@count.respond_to?(:call) then @count else
+        @count = @count.call
       end
     end
     

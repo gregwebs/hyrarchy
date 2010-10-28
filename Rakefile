@@ -1,7 +1,7 @@
 require 'rake/gempackagetask'
 $dir = File.dirname(__FILE__)
 
-task :default => :package
+task :default => :spec
 
 desc "Run all unit tests"
 task :test do

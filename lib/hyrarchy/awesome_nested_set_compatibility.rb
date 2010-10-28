@@ -37,6 +37,7 @@ module Hyrarchy
 
       # Rebuilds the model's hierarchy attributes based on the parent_id
       # attributes.
+      # TODO: utterly broken (will still return true if not forced and tree is valid)
       def rebuild!(force = false)
         return true if !force and (valid? rescue false)
         
@@ -144,6 +145,9 @@ module Hyrarchy
       #   node.self_and_descendants.find(:all, :conditions => { ... })
       #
       def self_and_descendants
+        # TODO: why a modified has_many?
+        # why not a modified scope?
+        # what happens with chaining? I would think the after callback would be wiped out
         cached[:self_and_descendants] ||= CollectionProxy.new(
           self,
           :descendants,

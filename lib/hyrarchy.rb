@@ -107,6 +107,15 @@ module Hyrarchy
           SELECT * FROM #{quoted_table_name} tt
           WHERE tt.parent_id = #{quoted_table_name}.id
         )")
+
+      send(rails3 ? :scope : :named_scope, :ancestors_from_paths,
+        lambda {|paths| {
+          :conditions => paths.empty? ? "id <> id" : [
+              paths.collect {|p| "(lft_numer = ? AND lft_denom = ?)"}.join(" OR "),
+            *(paths.collect {|p| [p.numerator, p.denominator]}.flatten)
+          ],
+          :order => 'rgt, lft DESC'
+        } })
     end
   end
   
@@ -197,15 +206,7 @@ module Hyrarchy
         path = path.parent
       end
       
-      cached[cache_key] = CollectionProxy.new(
-        self,
-        cache_key,
-        :conditions => paths.empty? ? "id <> id" : [
-          paths.collect {|p| "(lft_numer = ? AND lft_denom = ?)"}.join(" OR "),
-          *(paths.collect {|p| [p.numerator, p.denominator]}.flatten)
-        ],
-        :order => 'rgt, lft DESC'
-      )
+      cached[cache_key] = self.class.ancestors_from_paths(paths)
     end
     
     # Returns the root node related to this node, or nil if this node is a root
