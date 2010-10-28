@@ -2,14 +2,12 @@ module Hyrarchy
   module AwesomeNestedSetCompatibility
     module ClassMethods
       # Returns the first root node.
-      def root
-        roots.first
-      end
+      def root; roots.first; end
 
       # Returns true if the model's left and right values are valid, and all
       # root nodes have no ancestors.
       def valid?
-        left_and_rights_valid? && all_roots_valid?
+        left_and_rights_valid? and roots.all? {|r| r.root?}
       end
 
       # Returns true if the model's left and right values match the parent_id
@@ -17,8 +15,8 @@ module Hyrarchy
       def left_and_rights_valid?
         # Load all nodes and index them by ID so we can leave the database
         # alone.
-        nodes = connection.select_all("SELECT id, lft_numer, lft_denom, parent_id FROM #{quoted_table_name}")
         nodes_by_id = {}
+        nodes = connection.select_all("SELECT id, lft_numer, lft_denom, parent_id FROM #{quoted_table_name}")
         nodes.each do |node|
           node['id']           = node['id'].to_i
           node['encoded_path'] = Hyrarchy::EncodedPath(node['lft_numer'].to_i, node['lft_denom'].to_i)
@@ -37,29 +35,13 @@ module Hyrarchy
         end
       end
 
-      # Always returns true. This method exists solely for compatibility with
-      # awesome_nested_set; the test it performs doesn't apply to Hyrarchy.
-      def no_duplicates_for_columns?
-        true
-      end
-
-      # Returns true if all roots have no ancestors.
-      def all_roots_valid?
-        each_root_valid?(roots)
-      end
-
-      # Returns true if all of the nodes in +roots_to_validate+ have no
-      # ancestors.
-      def each_root_valid?(roots_to_validate)
-        roots_to_validate.all? {|r| r.root?}
-      end
-
       # Rebuilds the model's hierarchy attributes based on the parent_id
       # attributes.
       def rebuild!(force = false)
         return true if !force and (valid? rescue false)
         
-        update_all("lft = id, rgt = id, lft_numer = id, lft_denom = id")
+        default = 'id'
+        update_all("lft = #{default}, rgt = #{default}, lft_numer = #{default}, lft_denom = #{default}")
         paths_by_id = {}
         order_by = columns_hash['created_at'] ? :created_at : :id
         
@@ -75,6 +57,10 @@ module Hyrarchy
           nodes = find(:all, :conditions => { :parent_id => node_ids }, :order => order_by)
         end
       end
+
+      # Always returns true. This method exists solely for compatibility with
+      # awesome_nested_set; the test it performs doesn't apply to Hyrarchy.
+      def no_duplicates_for_columns?; true end
     end
     
     module InstanceMethods
